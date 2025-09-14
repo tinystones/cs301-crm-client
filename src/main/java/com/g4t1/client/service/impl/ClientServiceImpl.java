@@ -9,14 +9,11 @@ import com.g4t1.client.repository.ClientRepository;
 @Service
 public class ClientServiceImpl {
 
-    // Client createNewClient();
-    // Optional<Client> getClientByUUID(String id);
     // Client updateClientDetails();
     // boolean deleteClient(String id);
 
     @Autowired
     private ClientRepository clients;
-
 
     public Client createNewClient(Client clientData) {
         try {
@@ -25,7 +22,7 @@ public class ClientServiceImpl {
             }
 
             if (!clientData.getId().isBlank()) { // check if client has existing id
-                throw new IllegalArgumentException("Client already has an ID");
+                throw new IllegalArgumentException("client already has an ID");
             }
 
             String id = UUID.randomUUID().toString(); // generate UUID
@@ -35,4 +32,15 @@ public class ClientServiceImpl {
             throw new RuntimeException("failed to create client", e);
         }
     }
+
+    public Client getClientByUUID(String id) {
+        try {
+            return clients.findById(id).orElseThrow(() -> new RuntimeException("client not found"));
+        } catch (Exception e) {
+            throw new RuntimeException("failed to retreive client", e);
+        }
+    }
+
+
+
 }

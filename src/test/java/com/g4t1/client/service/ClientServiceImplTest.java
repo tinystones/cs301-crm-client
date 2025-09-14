@@ -4,16 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import com.g4t1.client.entity.Client;
 import com.g4t1.client.repository.ClientRepository;
 import com.g4t1.client.service.impl.ClientServiceImpl;
 
-
-@ExtendWith(MockitoExtension.class)
 public class ClientServiceImplTest {
 
     @Mock
@@ -43,9 +39,11 @@ public class ClientServiceImplTest {
     @Test
     void createNewClient_nullClient_throwsRuntimeException() {
         // Act & Assert
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.createNewClient(null));
+        RuntimeException ex =
+                assertThrows(RuntimeException.class, () -> service.createNewClient(null));
         assertNotNull(ex.getCause(), "cause should be present");
-        assertTrue(ex.getCause() instanceof IllegalArgumentException, "cause should be IllegalArgumentException");
+        assertTrue(ex.getCause() instanceof IllegalArgumentException,
+                "cause should be IllegalArgumentException");
         assertTrue(ex.getCause().getMessage().contains("client data must not be null"));
         verify(clients, never()).save(any());
     }
@@ -57,9 +55,11 @@ public class ClientServiceImplTest {
         input.setId("existing-id123"); // non-blank id should trigger check
 
         // Act & Assert
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.createNewClient(input));
+        RuntimeException ex =
+                assertThrows(RuntimeException.class, () -> service.createNewClient(input));
         assertNotNull(ex.getCause(), "cause should be present");
-        assertTrue(ex.getCause() instanceof IllegalArgumentException, "cause should be IllegalArgumentException");
+        assertTrue(ex.getCause() instanceof IllegalArgumentException,
+                "cause should be IllegalArgumentException");
         assertTrue(ex.getCause().getMessage().contains("Client already has an ID"));
         verify(clients, never()).save(any());
     }
