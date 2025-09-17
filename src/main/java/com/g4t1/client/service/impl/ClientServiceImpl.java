@@ -9,6 +9,7 @@ import com.g4t1.client.exceptions.ClientNotFoundException;
 import com.g4t1.client.exceptions.ExistingClientUUIDException;
 import com.g4t1.client.exceptions.NullClientException;
 import com.g4t1.client.repository.ClientRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ClientServiceImpl {
@@ -46,7 +47,7 @@ public class ClientServiceImpl {
         }
     }
 
-    // might need to refactor to handle concurrency
+    @Transactional
     public Client updateClientInfo(Client target, Client source) {
         if (target == null || source == null) { // check if inputs are valid
             throw new NullClientException();
@@ -55,6 +56,25 @@ public class ClientServiceImpl {
         Field[] fields = Client.class.getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true); // allow access to private fields
+            try {
+                Object value = field.get(source);
+                if (value != null) {
+                    field.set(target, value);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to update field: " + field.getName(), e);
+            }
+        }
+        return clients.save(target);
+    }
+
+    @Transactional
+    public Client updateClientInfoById(String id, Client source) {
+        Client target = clients.findByIdWithLocking(id).orElseThrow(ClientNotFoundException::new);
+
+        Field[] fields = Client.class.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
             try {
                 Object value = field.get(source);
                 if (value != null) {

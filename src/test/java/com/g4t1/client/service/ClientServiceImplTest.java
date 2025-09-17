@@ -138,8 +138,8 @@ public class ClientServiceImplTest {
         void arrangeRepo() {
             Client input = new Client();
             input.setId("");
-            input.setFirstName("Aptee");
-            input.setLastName("Tude");
+            input.setFirstName("Hydro");
+            input.setLastName("Flask");
 
             when(repository.save(any(Client.class))).thenReturn(input);
             targetClient = service.createNewClient(input);
