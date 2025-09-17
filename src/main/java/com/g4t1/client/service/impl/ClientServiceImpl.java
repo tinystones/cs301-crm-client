@@ -48,28 +48,12 @@ public class ClientServiceImpl {
     }
 
     @Transactional
-    public Client updateClientInfo(Client target, Client source) {
-        if (target == null || source == null) { // check if inputs are valid
+    public Client updateClientInfo(String id, Client source) {
+
+        if(source == null){
             throw new NullClientException();
         }
 
-        Field[] fields = Client.class.getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true); // allow access to private fields
-            try {
-                Object value = field.get(source);
-                if (value != null) {
-                    field.set(target, value);
-                }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Failed to update field: " + field.getName(), e);
-            }
-        }
-        return clients.save(target);
-    }
-
-    @Transactional
-    public Client updateClientInfoById(String id, Client source) {
         Client target = clients.findByIdWithLocking(id).orElseThrow(ClientNotFoundException::new);
 
         Field[] fields = Client.class.getDeclaredFields();
