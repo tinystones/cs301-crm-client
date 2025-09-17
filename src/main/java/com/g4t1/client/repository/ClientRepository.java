@@ -7,7 +7,9 @@ import com.g4t1.client.entity.Client;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
-    List<Client> findAllByFirstName(String firstName);
+    List<Client> findByFirstName(String firstName);
 
-    List<Client> findAllByLastName(String lastName);
+    List<Client> findByLastName(String lastName);
+
+    List<Client> findByFirstNameAndLastName(String firstName, String lastName);
 }
