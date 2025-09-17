@@ -7,14 +7,13 @@ import org.springframework.stereotype.Service;
 import com.g4t1.client.entity.Client;
 import com.g4t1.client.exceptions.ClientNotFoundException;
 import com.g4t1.client.exceptions.ExistingClientUUIDException;
+import com.g4t1.client.exceptions.NoClientDataException;
 import com.g4t1.client.exceptions.NullClientException;
 import com.g4t1.client.repository.ClientRepository;
 import jakarta.transaction.Transactional;
 
 @Service
 public class ClientServiceImpl {
-
-    // boolean deleteClient(String id);
 
     @Autowired
     private ClientRepository clients;
@@ -50,8 +49,8 @@ public class ClientServiceImpl {
     @Transactional
     public Client updateClientInfo(String id, Client source) {
 
-        if(source == null){
-            throw new NullClientException();
+        if (source == null) {
+            throw new NoClientDataException();
         }
 
         Client target = clients.findByIdWithLocking(id).orElseThrow(ClientNotFoundException::new);
@@ -65,7 +64,7 @@ public class ClientServiceImpl {
                     field.set(target, value);
                 }
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Failed to update field: " + field.getName(), e);
+                throw new RuntimeException("failed to update client", e);
             }
         }
         return clients.save(target);

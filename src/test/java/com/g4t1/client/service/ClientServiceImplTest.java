@@ -176,7 +176,6 @@ public class ClientServiceImplTest {
                     () -> service.updateClientInfo(missingId, sourceClient));
         }
 
-
         @Test
         void updateClientInfo_givenNullSource_throwsNullClientException() {
             /* Arrange */
