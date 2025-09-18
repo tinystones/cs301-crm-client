@@ -13,18 +13,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
-    @ExceptionHandler(ExistingClientUUIDException.class)
-    public ResponseEntity<String> handleExistingClientUUIDException(ExistingClientUUIDException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
-
-    @ExceptionHandler(NullClientException.class)
-    public ResponseEntity<String> handleNullClientException(NullClientException e) {
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(e.getMessage());
-    }
-
-    @ExceptionHandler(NoClientDataException.class)
-    public ResponseEntity<String> handleNoClientDataException(NoClientDataException e) {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 

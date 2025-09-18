@@ -3,7 +3,7 @@ package com.g4t1.client.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import java.util.Optional;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,9 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.g4t1.client.entity.Client;
 import com.g4t1.client.exceptions.ClientNotFoundException;
-import com.g4t1.client.exceptions.ExistingClientUUIDException;
-import com.g4t1.client.exceptions.NoClientDataException;
-import com.g4t1.client.exceptions.NullClientException;
+import com.g4t1.client.exceptions.InvalidClientSourceDataException;
 import com.g4t1.client.repository.ClientRepository;
 import com.g4t1.client.service.impl.ClientServiceImpl;
 
@@ -28,233 +26,324 @@ public class ClientServiceImplTest {
     @InjectMocks
     private ClientServiceImpl service;
 
+    private Client arrangeGoodSource() {
+        Client goodSource = new Client(null, "Hop", "Pod", LocalDate.now(), "Non-Binary",
+                "hippityhoppity@hoparound.com", "0908 1965", "71 hopping garden", "Singapore",
+                "Singapore", "Singapore", "317109", false);
+        return goodSource;
+    }
+
+    private Client arrangeBadSource() {
+        Client goodSource = new Client(null, "Hop", "Pod", LocalDate.now(), null, null, "0908 1965",
+                "71 hopping garden", null, "Singapore", null, "317109", false);
+        return goodSource;
+    }
+
+    private Client arrangeUpdateSource() {
+        Client goodSource = new Client(null, null, "Scotch", null, null, null, null,
+                "101 kinder grounds", "Zurich", "Zurich", "Switzerland", "8111013", true);
+        return goodSource;
+    }
+
+    // TODO: write tests for ValidateClient()
+
     @Nested
-    class CreateNewClientTests {
-        @Test
-        void createNewClient_givenNullClient_throwsNullClientException() {
+    class ValidateSourceDataTests {
 
-            /* Arrange */
-            Client input = null;
-            NullClientException e;
+        /* Arrange */
+        Client goodSource;
+        Client badSource;
 
-            /* Act & Assert */
-            e = assertThrows(NullClientException.class, () -> service.createNewClient(input));
-            assertEquals(e.getMessage(), "client data must not be null");
+        @BeforeEach
+        void arrangeSources() {
+            goodSource = arrangeGoodSource();
+            badSource = arrangeBadSource();
         }
 
         @Test
-        void createNewClient_givenClientWithUUID_throwsExistingClientUUIDException() {
-            /* Arrange */
-            Client input = new Client();
-            input.setId("existing-id@2025");
-            ExistingClientUUIDException e;
-
+        void validateSourceData_givenGoodSourceForCreate_returnTrue() {
             /* Act & Assert */
-            e = assertThrows(ExistingClientUUIDException.class,
-                    () -> service.createNewClient(input));
-            assertEquals(e.getMessage(), "client already has an id");
+            boolean result = service.validateSourceData(goodSource, true);
+            assertTrue(result);
         }
 
         @Test
-        void createNewClient_givenValidClient_savesSuccesfully() {
-            /* Arrange */
-            Client result;
-            Client input = new Client();
-            input.setId("");
-            input.setFirstName("Apple");
-            input.setLastName("Pie");
-            ExistingClientUUIDException e;
-
-            when(repository.save(any(Client.class))).thenReturn(input);
-
+        void validateSourceData_givenBadSourceForCreate_returnFalse() {
             /* Act & Assert */
+            boolean result = service.validateSourceData(badSource, true);
+            assertFalse(result);
+        }
 
-            result = service.createNewClient(input);
-            assertEquals(Client.class, result.getClass());
-            assertEquals("Apple", result.getFirstName());
-            assertEquals("Pie", result.getLastName());
-            assertTrue(result.getId() instanceof String);
-            System.out.println(result.getId());
+        @Test
+        void validateSourceData_givenAnySourceForUpdate1_returnTrue() {
+            /* Act & Assert */
+            boolean result = service.validateSourceData(goodSource, false);
+            assertTrue(result);
+        }
+
+        @Test
+        void validateSourceData_givenAnySourceForUpdate2_returnTrue() {
+            /* Act & Assert */
+            boolean result = service.validateSourceData(badSource, false);
+            assertTrue(result);
+        }
+
+        @Test
+        void validateSourceData_givenNull_returnFalse() {
+            /* Act & Assert */
+            boolean result = service.validateSourceData(null, false);
+            assertFalse(result);
+        }
+
+        @Test
+        void validateSourceData_givenSourceWithID_returnFalse() {
+            /* Act & Assert */
+            goodSource.setId("existing-id");
+            boolean result = service.validateSourceData(goodSource, false);
+            assertFalse(result);
         }
     }
 
     @Nested
-    class updateClientInfoTests {
+    class CreateClientTests {
 
+        /* Arrange */
+        Client goodSource;
+        Client badSource;
+        InvalidClientSourceDataException ex;
+
+        @BeforeEach
+        void arrangeSources() {
+            goodSource = arrangeGoodSource();
+            badSource = arrangeBadSource();
+            ex = null;
+        }
+
+        @Test
+        void createClient_givenNull_throwsInvalidClientSourceDataException() {
+            /* Act & Assert */
+            ex = assertThrows(InvalidClientSourceDataException.class,
+                    () -> service.createClient(null));
+            assertEquals(ex.getMessage(), "invalid client source data, please check fields");
+        }
+
+        @Test
+        void createClient_givenClientWithID_throwsInvalidClientSourceDataException() {
+            /* Arrange */
+            goodSource.setId("existing-id");
+            /* Act & Assert */
+            ex = assertThrows(InvalidClientSourceDataException.class,
+                    () -> service.createClient(goodSource));
+            assertEquals(ex.getMessage(), "invalid client source data, please check fields");
+        }
+
+        @Test
+        void createClient_givenBadSource_throwsInvalidClientSourceDataException() {
+            /* Act & Assert */
+            ex = assertThrows(InvalidClientSourceDataException.class,
+                    () -> service.createClient(badSource));
+            assertEquals(ex.getMessage(), "invalid client source data, please check fields");
+        }
+
+        @Test
+        void createClient_givenGoodSource_savesSuccessfully() {
+            /* Arrange */
+            when(repository.save(any(Client.class))).thenReturn(goodSource);
+            /* Act & Assert */
+            Client result = service.createClient(goodSource);
+            assertEquals(Client.class, result.getClass());
+            assertEquals("Hop", result.getFirstName());
+            assertEquals("Pod", result.getLastName());
+            assertEquals("Non-Binary", result.getGender());
+            assertEquals("317109", result.getPostalCode());
+            assertTrue(result.getId() instanceof String);
+        }
+    }
+
+    @Nested
+    class UpdateClientTests {
+
+        /* Arrage */
         Client targetClient;
         Client sourceClient;
+        String targetId;
 
         @BeforeEach
         void arrangeRepo() {
-            Client targetDummy = new Client();
-            targetDummy.setId("");
-            targetDummy.setFirstName("Crab");
-            targetDummy.setLastName("Wiggle");
-            targetDummy.setCountry("sInGapoUR");
-
-            when(repository.save(any(Client.class))).thenReturn(targetDummy);
-            targetClient = service.createNewClient(targetDummy);
-
-            Client sourceDummy = new Client();
-            sourceDummy.setId("");
-            sourceDummy.setFirstName("Fuzzy");
-            sourceDummy.setCountry("Singapore");
-
-            when(repository.save(any(Client.class))).thenReturn(sourceDummy);
-            sourceClient = service.createNewClient(sourceDummy);
+            targetClient = arrangeGoodSource();
+            targetClient.setId("target-id-123");
+            sourceClient = arrangeUpdateSource();
+            targetId = targetClient.getId();
         }
 
         @Test
-        void updateClientInfo_givenNullClientID_RuntimeException() {
-            /* Arrange */
-            String nullId = null;
-
+        void updateClient_givenNull_throwsIllegalArgumentException() {
             /* Act & Assert */
-            assertThrows(RuntimeException.class,
-                    () -> service.updateClientInfo(nullId, sourceClient));
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.updateClient(null, sourceClient));
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.updateClient("   ", sourceClient));
         }
 
         @Test
-        void updateClientInfo_givenMissingClientID_throwsClientNotFoundException() {
-            /* Arrange */
-            String missingId = "nonexistent-id";
-            when(repository.findByIdWithLocking(missingId)).thenReturn(Optional.empty());
+        void updateClient_givenNullSource_throwsInvalidClientSourceDataException() {
+            /* Arrage */
+            when(repository.existsById(targetId)).thenReturn(true);
+            when(repository.findByIdWithLocking(targetId))
+                    .thenReturn(java.util.Optional.of(targetClient));
+            /* Act & Assert */
+            assertThrows(InvalidClientSourceDataException.class,
+                    () -> service.updateClient(targetId, null));
+        }
+
+        @Test
+        void updateClient_givenRandomTargetId_throwsClientNotFoundException() {
+            /* Arrage */
+            String missingId = "1-very-challenging-brick-wall";
+            when(repository.existsById(missingId)).thenReturn(true);
+            when(repository.findByIdWithLocking(missingId)).thenReturn(java.util.Optional.empty());
 
             /* Act & Assert */
             assertThrows(ClientNotFoundException.class,
-                    () -> service.updateClientInfo(missingId, sourceClient));
+                    () -> service.updateClient(missingId, sourceClient));
         }
 
         @Test
-        void updateClientInfo_givenNullSource_throwsNoClientDataException() {
-            /* Arrange */
-            String targetId = targetClient.getId();
+        void updateClient_givenValidSource_updatesSuccessfully() {
+
+            /* Arrage */
+            when(repository.existsById(targetId)).thenReturn(true);
+            when(repository.findByIdWithLocking(targetId))
+                    .thenReturn(java.util.Optional.of(targetClient));
+            when(repository.save(any(Client.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             /* Act & Assert */
-            assertThrows(NoClientDataException.class, () -> service.updateClientInfo(targetId, null));
-        }
-
-        @Test
-        void updateClientInfo_givenValidSource_updatetargetClientSuccessfully() {
-            /* Arrange */
-            String targetId = targetClient.getId();
-            Client result;
-
-            // Mock repository to return the target client when locking is used
-            when(repository.findByIdWithLocking(targetId)).thenReturn(Optional.of(targetClient));
-            // Mock repository to return the updated client after save
-            when(repository.save(any(Client.class))).thenReturn(targetClient);
-
-            /* Act & Assert */
-            result = service.updateClientInfo(targetId, sourceClient);
+            Client result = service.updateClient(targetId, sourceClient);
+            // Only non-null/non-blank fields from sourceClient should be updated
             assertNotNull(result);
-            assertEquals("Fuzzy", result.getFirstName());
-            assertEquals("Wiggle", result.getLastName());
-            assertEquals("Singapore", result.getCountry());
-            assertNull(result.getDateOfBirth());
-            assertNull(result.getGender());
-            assertNull(result.getAddress());
+            assertEquals(targetId, result.getId());
+            assertEquals("Hop", result.getFirstName()); // not updated (source null)
+            assertEquals("Scotch", result.getLastName()); // updated
+            assertEquals("101 kinder grounds", result.getAddress()); // updated
+            assertEquals("Zurich", result.getCity()); // updated
+            assertEquals("Zurich", result.getState()); // updated
+            assertEquals("Switzerland", result.getCountry()); // updated
+            assertEquals("8111013", result.getPostalCode()); // updated
+            assertTrue(result.isValidated()); // updated
         }
     }
 
     @Nested
-    class getClientByUUIDTests {
+    class GetClientTests {
 
-        Client targetClient; // shared client for tests to use
+        /* Arrange */
+        Client targetClient;
+        String targetId;
+        RuntimeException ex;
 
         @BeforeEach
         void arrangeRepo() {
-            Client input = new Client();
-            input.setId("");
-            input.setFirstName("Chicken");
-            input.setLastName("Rice");
+            Client goodSource = arrangeGoodSource();
+            ex = null;
 
-            when(repository.save(any(Client.class))).thenReturn(input);
-            targetClient = service.createNewClient(input);
+            when(repository.save(any(Client.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            targetClient = service.createClient(goodSource);
+            targetId = targetClient.getId();
         }
 
         @Test
-        void getClientByUUID_givenNullClientID_throwsRuntimeException() {
-            /* Arrange */
-            String nullId = null;
+        void getClient_givenNull_throwIllegalArgumentException() {
+            /* Act & Assert */
+            ex = assertThrows(IllegalArgumentException.class, () -> service.getClient(null));
+            assertEquals(ex.getMessage(), "client id must not be blank");
+        }
+
+        @Test
+        void getClient_givenBlankId_throwIllegalArgumentException() {
+            /* Act & Assert */
+            ex = assertThrows(IllegalArgumentException.class, () -> service.getClient("   "));
+            assertEquals(ex.getMessage(), "client id must not be blank");
+        }
+
+        @Test
+        void getClient_givenRandomTargetId_throwClientNotFoundException() {
+            /* Act & Assert */
+            ex = assertThrows(ClientNotFoundException.class,
+                    () -> service.getClient("1-very-challenging-brick-wall"));
+            assertEquals(ex.getMessage(), "client not found");
+        }
+
+        @Test
+        void getClient_givenExisitingTargetId_returnsClient() {
+
+            /* Arrage */
+            when(repository.existsById(targetId)).thenReturn(true);
+            when(repository.findById(targetId)).thenReturn(java.util.Optional.of(targetClient));
 
             /* Act & Assert */
-            assertThrows(RuntimeException.class, () -> service.getClientByUUID(nullId));
-        }
-
-        @Test
-        void getClientByUUID_givenMissingClient_throwsClientNotFoundException() {
-            /* Arrange */
-            String missingId = "nonexistent-id";
-
-            /* Act & Assert */
-            assertThrows(ClientNotFoundException.class, () -> service.getClientByUUID(missingId));
-        }
-
-        @Test
-        void getClientByUUID_givenPresentClient_returnsClient() {
-            /* Arrange */
-            String targetId = targetClient.getId();
-
-            when(repository.findById(targetId)).thenReturn(Optional.of(targetClient));
-
-            /* Act */
-            Client result = service.getClientByUUID(targetId);
-
-            /* Assert */
+            Client result = service.getClient(targetId);
             assertNotNull(result); // check if client is found
             assertEquals(targetId, result.getId()); // check if same UUID
-            assertEquals("Chicken", result.getFirstName());
-            assertEquals("Rice", result.getLastName());
+            assertEquals(Client.class, result.getClass());
+            assertEquals("Hop", result.getFirstName());
+            assertEquals("Pod", result.getLastName());
+            assertEquals("Non-Binary", result.getGender());
+            assertEquals("317109", result.getPostalCode());
         }
     }
 
     @Nested
-    class deleteClientTests {
+    class DeleteClientTests {
 
+        /* Arrange */
         Client targetClient;
+        String targetId;
+        RuntimeException ex;
 
         @BeforeEach
         void arrangeRepo() {
-            Client input = new Client();
-            input.setId("");
-            input.setFirstName("Hydro");
-            input.setLastName("Flask");
+            Client goodSource = arrangeGoodSource();
+            ex = null;
 
-            when(repository.save(any(Client.class))).thenReturn(input);
-            targetClient = service.createNewClient(input);
+            when(repository.save(any(Client.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            targetClient = service.createClient(goodSource);
+            targetId = targetClient.getId();
         }
 
         @Test
-        void deleteClient_givenNullClientID_throwsRuntimeException() {
-            /* Arrange */
-            String nullID = null;
-
+        void deleteClient_givenNull_throwIllegalArgumentException() {
             /* Act & Assert */
-            assertThrows(RuntimeException.class, () -> service.deleteClient(nullID));
+            ex = assertThrows(IllegalArgumentException.class, () -> service.deleteClient(null));
+            assertEquals(ex.getMessage(), "client id must not be blank");
         }
 
         @Test
-        void deleteClient_givenMissingClient_throwsClientNotFoundException() {
-            /* Arrange */
-            String missingId = "nonexistent-id";
-
+        void deleteClient_givenBlank_throwIllegalArgumentException() {
             /* Act & Assert */
-            assertThrows(ClientNotFoundException.class, () -> service.deleteClient(missingId));
+            ex = assertThrows(IllegalArgumentException.class, () -> service.deleteClient("   "));
+            assertEquals(ex.getMessage(), "client id must not be blank");
         }
 
         @Test
-        void deleteClient_givenPresentClient_deleteSuccesfully() {
-            /* Arrange */
-            String targetId = targetClient.getId();
-            boolean result = false;
+        void deleteClient_givenRandomTargetId_throwClientNotFoundException() {
+            /* Act & Assert */
+            ex = assertThrows(ClientNotFoundException.class,
+                    () -> service.deleteClient("1-very-challenging-brick-wall"));
+            assertEquals(ex.getMessage(), "client not found");
+        }
 
+        @Test
+        void deleteClient_givenRandomTargetId_returnTrue() {
+            /* Arrage */
             when(repository.existsById(targetId)).thenReturn(true);
 
             /* Act & Assert */
-            result = service.deleteClient(targetId);
-            assertTrue(result);
-            assertThrows(ClientNotFoundException.class, () -> service.getClientByUUID(targetId));
+            assertTrue(service.deleteClient(targetId));
         }
     }
 }

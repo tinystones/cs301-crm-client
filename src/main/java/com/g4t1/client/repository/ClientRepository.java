@@ -18,4 +18,5 @@ public interface ClientRepository extends JpaRepository<Client, String> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Client> findByIdWithLocking(String id);
+
 }
