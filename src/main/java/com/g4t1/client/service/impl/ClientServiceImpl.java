@@ -76,6 +76,8 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
+    // TODO: verify client method + endpoint
+
     @Override
     @Transactional
     public Client updateClient(String id, Client source) {
