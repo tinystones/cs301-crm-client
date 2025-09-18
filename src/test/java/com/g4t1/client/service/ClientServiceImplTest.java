@@ -131,6 +131,7 @@ public class ClientServiceImplTest {
         void createClient_givenClientWithID_throwsInvalidClientSourceDataException() {
             /* Arrange */
             goodSource.setId("existing-id");
+
             /* Act & Assert */
             ex = assertThrows(InvalidClientSourceDataException.class,
                     () -> service.createClient(goodSource));
@@ -149,6 +150,7 @@ public class ClientServiceImplTest {
         void createClient_givenGoodSource_savesSuccessfully() {
             /* Arrange */
             when(repository.save(any(Client.class))).thenReturn(goodSource);
+
             /* Act & Assert */
             Client result = service.createClient(goodSource);
             assertEquals(Client.class, result.getClass());
@@ -189,7 +191,7 @@ public class ClientServiceImplTest {
         void updateClient_givenNullSource_throwsInvalidClientSourceDataException() {
             /* Arrage */
             when(repository.existsById(targetId)).thenReturn(true);
-            
+
             /* Act & Assert */
             assertThrows(InvalidClientSourceDataException.class,
                     () -> service.updateClient(targetId, null));
@@ -340,7 +342,7 @@ public class ClientServiceImplTest {
         }
 
         @Test
-        void deleteClient_givenRandomTargetId_returnTrue() {
+        void deleteClient_givenTargetId_returnTrue() {
             /* Arrage */
             when(repository.existsById(targetId)).thenReturn(true);
 
