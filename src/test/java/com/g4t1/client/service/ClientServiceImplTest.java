@@ -40,7 +40,7 @@ public class ClientServiceImplTest {
     }
 
     private Client arrangeUpdateSource() {
-        Client goodSource = new Client(null, null, "Scotch", null, null, null, null,
+        Client goodSource = new Client(null, null, "Scotch", null, "   ", "", null,
                 "101 kinder grounds", "Zurich", "Zurich", "Switzerland", "8111013", true);
         return goodSource;
     }
@@ -189,8 +189,7 @@ public class ClientServiceImplTest {
         void updateClient_givenNullSource_throwsInvalidClientSourceDataException() {
             /* Arrage */
             when(repository.existsById(targetId)).thenReturn(true);
-            when(repository.findByIdWithLocking(targetId))
-                    .thenReturn(java.util.Optional.of(targetClient));
+            
             /* Act & Assert */
             assertThrows(InvalidClientSourceDataException.class,
                     () -> service.updateClient(targetId, null));
@@ -231,6 +230,9 @@ public class ClientServiceImplTest {
             assertEquals("Switzerland", result.getCountry()); // updated
             assertEquals("8111013", result.getPostalCode()); // updated
             assertTrue(result.isValidated()); // updated
+
+            assertEquals("Non-Binary", result.getGender()); // not updated
+            assertEquals("hippityhoppity@hoparound.com", result.getEmailAddress());// not updated
         }
     }
 
