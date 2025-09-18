@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.g4t1.client.entity.Client;
 import com.g4t1.client.exceptions.ClientNotFoundException;
 import com.g4t1.client.exceptions.ExistingClientUUIDException;
+import com.g4t1.client.exceptions.NoClientDataException;
 import com.g4t1.client.exceptions.NullClientException;
 import com.g4t1.client.repository.ClientRepository;
 import com.g4t1.client.service.impl.ClientServiceImpl;
@@ -78,6 +79,85 @@ public class ClientServiceImplTest {
     }
 
     @Nested
+    class updateClientInfoTests {
+
+        Client targetClient;
+        Client sourceClient;
+
+        @BeforeEach
+        void arrangeRepo() {
+            Client targetDummy = new Client();
+            targetDummy.setId("");
+            targetDummy.setFirstName("Crab");
+            targetDummy.setLastName("Wiggle");
+            targetDummy.setCountry("sInGapoUR");
+
+            when(repository.save(any(Client.class))).thenReturn(targetDummy);
+            targetClient = service.createNewClient(targetDummy);
+
+            Client sourceDummy = new Client();
+            sourceDummy.setId("");
+            sourceDummy.setFirstName("Fuzzy");
+            sourceDummy.setCountry("Singapore");
+
+            when(repository.save(any(Client.class))).thenReturn(sourceDummy);
+            sourceClient = service.createNewClient(sourceDummy);
+        }
+
+        @Test
+        void updateClientInfo_givenNullClientID_RuntimeException() {
+            /* Arrange */
+            String nullId = null;
+
+            /* Act & Assert */
+            assertThrows(RuntimeException.class,
+                    () -> service.updateClientInfo(nullId, sourceClient));
+        }
+
+        @Test
+        void updateClientInfo_givenMissingClientID_throwsClientNotFoundException() {
+            /* Arrange */
+            String missingId = "nonexistent-id";
+            when(repository.findByIdWithLocking(missingId)).thenReturn(Optional.empty());
+
+            /* Act & Assert */
+            assertThrows(ClientNotFoundException.class,
+                    () -> service.updateClientInfo(missingId, sourceClient));
+        }
+
+        @Test
+        void updateClientInfo_givenNullSource_throwsNoClientDataException() {
+            /* Arrange */
+            String targetId = targetClient.getId();
+
+            /* Act & Assert */
+            assertThrows(NoClientDataException.class, () -> service.updateClientInfo(targetId, null));
+        }
+
+        @Test
+        void updateClientInfo_givenValidSource_updatetargetClientSuccessfully() {
+            /* Arrange */
+            String targetId = targetClient.getId();
+            Client result;
+
+            // Mock repository to return the target client when locking is used
+            when(repository.findByIdWithLocking(targetId)).thenReturn(Optional.of(targetClient));
+            // Mock repository to return the updated client after save
+            when(repository.save(any(Client.class))).thenReturn(targetClient);
+
+            /* Act & Assert */
+            result = service.updateClientInfo(targetId, sourceClient);
+            assertNotNull(result);
+            assertEquals("Fuzzy", result.getFirstName());
+            assertEquals("Wiggle", result.getLastName());
+            assertEquals("Singapore", result.getCountry());
+            assertNull(result.getDateOfBirth());
+            assertNull(result.getGender());
+            assertNull(result.getAddress());
+        }
+    }
+
+    @Nested
     class getClientByUUIDTests {
 
         Client targetClient; // shared client for tests to use
@@ -126,85 +206,6 @@ public class ClientServiceImplTest {
             assertEquals(targetId, result.getId()); // check if same UUID
             assertEquals("Chicken", result.getFirstName());
             assertEquals("Rice", result.getLastName());
-        }
-    }
-
-    @Nested
-    class updateClientInfoTests {
-
-        Client targetClient;
-        Client sourceClient;
-
-        @BeforeEach
-        void arrangeRepo() {
-            Client targetDummy = new Client();
-            targetDummy.setId("");
-            targetDummy.setFirstName("Crab");
-            targetDummy.setLastName("Wiggle");
-            targetDummy.setCountry("sInGapoUR");
-
-            when(repository.save(any(Client.class))).thenReturn(targetDummy);
-            targetClient = service.createNewClient(targetDummy);
-
-            Client sourceDummy = new Client();
-            sourceDummy.setId("");
-            sourceDummy.setFirstName("Fuzzy");
-            sourceDummy.setCountry("Singapore");
-
-            when(repository.save(any(Client.class))).thenReturn(sourceDummy);
-            sourceClient = service.createNewClient(sourceDummy);
-        }
-
-        @Test
-        void updateClientInfo_givenNullClientID_RuntimeException() {
-            /* Arrange */
-            String nullId = null;
-
-            /* Act & Assert */
-            assertThrows(RuntimeException.class,
-                    () -> service.updateClientInfo(nullId, sourceClient));
-        }
-
-        @Test
-        void updateClientInfo_givenMissingClientID_throwsClientNotFoundException() {
-            /* Arrange */
-            String missingId = "nonexistent-id";
-            when(repository.findByIdWithLocking(missingId)).thenReturn(Optional.empty());
-
-            /* Act & Assert */
-            assertThrows(ClientNotFoundException.class,
-                    () -> service.updateClientInfo(missingId, sourceClient));
-        }
-
-        @Test
-        void updateClientInfo_givenNullSource_throwsNullClientException() {
-            /* Arrange */
-            String targetId = targetClient.getId();
-
-            /* Act & Assert */
-            assertThrows(NullClientException.class, () -> service.updateClientInfo(targetId, null));
-        }
-
-        @Test
-        void updateClientInfo_givenValidSource_updatetargetClientSuccessfully() {
-            /* Arrange */
-            String targetId = targetClient.getId();
-            Client result;
-
-            // Mock repository to return the target client when locking is used
-            when(repository.findByIdWithLocking(targetId)).thenReturn(Optional.of(targetClient));
-            // Mock repository to return the updated client after save
-            when(repository.save(any(Client.class))).thenReturn(targetClient);
-
-            /* Act & Assert */
-            result = service.updateClientInfo(targetId, sourceClient);
-            assertNotNull(result);
-            assertEquals("Fuzzy", result.getFirstName());
-            assertEquals("Wiggle", result.getLastName());
-            assertEquals("Singapore", result.getCountry());
-            assertNull(result.getDateOfBirth());
-            assertNull(result.getGender());
-            assertNull(result.getAddress());
         }
     }
 

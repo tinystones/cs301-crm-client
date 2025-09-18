@@ -36,16 +36,6 @@ public class ClientServiceImpl {
         }
     }
 
-    public Client getClientByUUID(String id) {
-        try {
-            return clients.findById(id).orElseThrow(ClientNotFoundException::new);
-        } catch (ClientNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("failed to retrieve client", e);
-        }
-    }
-
     @Transactional
     public Client updateClientInfo(String id, Client source) {
 
@@ -68,6 +58,16 @@ public class ClientServiceImpl {
             }
         }
         return clients.save(target);
+    }
+
+    public Client getClientByUUID(String id) {
+        try {
+            return clients.findById(id).orElseThrow(ClientNotFoundException::new);
+        } catch (ClientNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("failed to retrieve client", e);
+        }
     }
 
     public boolean deleteClient(String id) {
