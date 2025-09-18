@@ -1,5 +1,7 @@
 package com.g4t1.client.controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -47,5 +49,11 @@ public class ClientController {
     public ResponseEntity<Void> deleteClient(@PathVariable @NotBlank String id) {
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/health")
+    public Map<String, String> health() {
+        Map<String, String> status = new HashMap<>();
+        status.put("status", "UP");
+        return status;
     }
 }

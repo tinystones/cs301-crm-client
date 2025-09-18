@@ -17,6 +17,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     List<Client> findByFirstNameAndLastName(String firstName, String lastName);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM Client c WHERE c.id = :id")
     Optional<Client> findByIdWithLocking(String id);
 
 }
