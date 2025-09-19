@@ -50,10 +50,30 @@ public class ClientController {
         clientService.deleteClient(id);
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping("/health")
-    public Map<String, String> health() {
-        Map<String, String> status = new HashMap<>();
-        status.put("status", "UP");
-        return status;
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> status = new HashMap<>();
+
+        try {
+            // Check if service and database are healthy
+            boolean isHealthy = clientService.healthCheck();
+
+            if (isHealthy) {
+                status.put("status", "UP");
+                status.put("database", "UP");
+                status.put("service", "client-service");
+                status.put("timestamp", java.time.Instant.now());
+                return ResponseEntity.ok(status);
+            } else {
+                throw new RuntimeException();
+            }
+        } catch (Exception e) {
+            status.put("status", "DOWN");
+            status.put("error", "Health check failed");
+            status.put("service", "client-service");
+            status.put("timestamp", java.time.Instant.now());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(status);
+        }
     }
 }

@@ -132,4 +132,18 @@ public class ClientServiceImpl implements ClientService {
             throw new RuntimeException("failed to delete client", e);
         }
     }
+
+    @Override
+    public boolean healthCheck() { // for aws ecs/elb
+        try {
+            // test database connectivity by executing a simple query
+            // will throw an exception if the database is not accessible
+            clients.count();
+            return true;
+        } catch (Exception e) {
+            // log the exception for debugging purposes
+            System.err.println("Health check failed: " + e.getMessage());
+            return false;
+        }
+    }
 }

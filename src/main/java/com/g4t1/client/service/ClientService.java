@@ -14,4 +14,6 @@ public interface ClientService {
     Client getClient(String id);
 
     boolean deleteClient(String id);
+
+    boolean healthCheck();
 }
