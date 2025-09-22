@@ -107,45 +107,46 @@ public class ClientServiceIntegrationTest {
         }
     }
 
-@Nested
-@DisplayName("Get Client Service Tests")
-class GetClientServiceTests {
+    @Nested
+    @DisplayName("Get Client Service Tests")
+    class GetClientServiceTests {
 
-    @Test
-    @DisplayName("Should retrieve existing client")
-    void getClient_ExistingId_ReturnsClient() {
-        // Given
-        Client saved = clientService.createClient(validClient);
+        @Test
+        @DisplayName("Should retrieve existing client")
+        void getClient_ExistingId_ReturnsClient() {
+            // Given
+            Client saved = clientService.createClient(validClient);
 
-        // When
-        Client retrieved = clientService.getClient(saved.getId());
+            // When
+            Client retrieved = clientService.getClient(saved.getId());
 
-        // Then
-        assertNotNull(retrieved);
-        assertEquals(saved.getId(), retrieved.getId());
-        assertEquals(saved.getFirstName(), retrieved.getFirstName());
-        assertEquals(saved.getEmailAddress(), retrieved.getEmailAddress());
+            // Then
+            assertNotNull(retrieved);
+            assertEquals(saved.getId(), retrieved.getId());
+            assertEquals(saved.getFirstName(), retrieved.getFirstName());
+            assertEquals(saved.getEmailAddress(), retrieved.getEmailAddress());
+        }
+    }
+
+
+    @Nested
+    @DisplayName("Delete Client Service Tests")
+    class DeleteClientServiceTests {
+
+        @Test
+        @DisplayName("Should delete existing client")
+        void deleteClient_ExistingId_DeletesSuccessfully() {
+            // Given
+            Client saved = clientService.createClient(validClient);
+            String clientId = saved.getId();
+            assertTrue(clientRepository.existsById(clientId));
+
+            // When
+            boolean result = clientService.deleteClient(clientId);
+
+            // Then
+            assertTrue(result);
+            assertFalse(clientRepository.existsById(clientId));
+        }
     }
 }
-
-
-@Nested
-@DisplayName("Delete Client Service Tests")
-class DeleteClientServiceTests {
-
-    @Test
-    @DisplayName("Should delete existing client")
-    void deleteClient_ExistingId_DeletesSuccessfully() {
-        // Given
-        Client saved = clientService.createClient(validClient);
-        String clientId = saved.getId();
-        assertTrue(clientRepository.existsById(clientId));
-
-        // When
-        boolean result = clientService.deleteClient(clientId);
-
-        // Then
-        assertTrue(result);
-        assertFalse(clientRepository.existsById(clientId));
-    }
-}}

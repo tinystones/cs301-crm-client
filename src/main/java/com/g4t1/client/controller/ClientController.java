@@ -20,6 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 @RestController
 @Validated
 public class ClientController {
+    
     private final ClientService clientService;
 
     public ClientController(ClientService clientService) {

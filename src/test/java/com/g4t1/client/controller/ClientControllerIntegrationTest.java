@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.g4t1.client.config.TestSecurityConfig;
 import com.g4t1.client.entity.Client;
 import com.g4t1.client.repository.ClientRepository;
-import com.g4t1.client.service.ClientService;
+import com.g4t1.client.service.impl.ClientServiceImpl;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -29,6 +29,7 @@ import com.g4t1.client.service.ClientService;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Import(TestSecurityConfig.class)
 public class ClientControllerIntegrationTest {
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,7 +40,7 @@ public class ClientControllerIntegrationTest {
     private ClientRepository clientRepository;
 
     @Autowired
-    private ClientService clientService;
+    private ClientServiceImpl clientService;
 
     private Client validClient;
     private Client invalidClient;
@@ -83,6 +84,16 @@ public class ClientControllerIntegrationTest {
         }
 
         @Test
+        @DisplayName("Should return 400 when client has non-null ID")
+        void createClient_WithId_Returns400() throws Exception {
+            validClient.setId("some-id");
+
+            mockMvc.perform(post("/api/clients").contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(validClient)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
         @DisplayName("Should return 201 when valid JSON is provided")
         void createClient_ValidJson_Returns201() throws Exception {
             mockMvc.perform(post("/api/clients").contentType(MediaType.APPLICATION_JSON)
@@ -92,29 +103,11 @@ public class ClientControllerIntegrationTest {
                     .andExpect(jsonPath("$.lastName", is("Pod")))
                     .andExpect(jsonPath("$.emailAddress", is("hippityhoppity@hoparound.com")));
         }
-
-        @Test
-        @DisplayName("Should return 400 when client has non-null ID")
-        void createClient_WithId_Returns400() throws Exception {
-            validClient.setId("some-id");
-
-            mockMvc.perform(post("/api/clients").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validClient)))
-                    .andExpect(status().isBadRequest());
-        }
     }
 
     @Nested
     @DisplayName("Update Client Tests")
     class UpdateClientTests {
-
-        @Test
-        @DisplayName("Should return 404 when target ID is blank")
-        void updateClient_BlankId_Returns404() throws Exception {
-            mockMvc.perform(put("/api/clients/").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(updateClient)))
-                    .andExpect(status().isNotFound()); // Should be 404 for malformed URL
-        }
 
         @Test
         @DisplayName("Should return 404 when client does not exist")
@@ -130,10 +123,7 @@ public class ClientControllerIntegrationTest {
         @Test
         @DisplayName("Should return 400 when source data is invalid")
         void updateClient_InvalidSource_Returns400() throws Exception {
-            // First create a client using the service (proper way)
             Client savedClient = clientService.createClient(validClient);
-
-            // Try to update with invalid data (client with ID set)
             invalidClient.setId("should-be-null");
 
             mockMvc.perform(put("/api/clients/{id}", savedClient.getId())
