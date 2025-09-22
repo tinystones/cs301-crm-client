@@ -28,7 +28,7 @@ import com.g4t1.client.service.ClientService;
 @TestPropertySource(locations = "classpath:application-test.properties")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Import(TestSecurityConfig.class)
-public class ClientControllerTest {
+public class ClientControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
